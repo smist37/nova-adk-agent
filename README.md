@@ -25,20 +25,34 @@ Public LinkedIn post lands at the end of each week.
 - [`google-adk`](https://pypi.org/project/google-adk/) — Agent Development Kit
 - `uv` or `pip` + `venv` for dependency management
 
-## Architecture (target — coming during Week 1)
+## Architecture
 
 ```
-┌────────────────┐   ┌──────────────────┐   ┌─────────────────┐
-│  Coordinator   │──▶│  Summarizer      │──▶│  Formatter      │
-│  agent         │   │  agent           │   │  agent          │
-└────────────────┘   └──────────────────┘   └─────────────────┘
-        │
-        ▼
-   tool: fetch_transcript(url)
+┌────────────────────────────────────────────────────────────────┐
+│  Coordinator                                                   │
+│  tools: fetch_transcript, load_profile, save_profile          │
+└──────────────────────────┬─────────────────────────────────────┘
+                           │ transfer (after transcript ready)
+                           ▼
+                ┌──────────────────────┐
+                │  Summarizer          │
+                │  output_key=key_ideas│
+                └──────────┬───────────┘
+                           │ transfer
+                           ▼
+                ┌──────────────────────┐
+                │  Formatter           │
+                │  (terminal)          │
+                └──────────────────────┘
 ```
 
-Multi-agent orchestration via ADK's A2A protocol — the JD's exact keywords
+Three-agent chain via ADK's transfer pattern — the JD's exact keywords
 ("agent + multi-agent dev", "A2A, MCP, ADK"), implemented end-to-end.
+
+The coordinator collects the user profile (persisted locally in
+`user_profile.json`) and fetches the transcript. The summarizer extracts key
+ideas in the user's vocabulary. The formatter produces the final personalized
+synthesis and addresses the user by name.
 
 ## Getting started
 
@@ -51,10 +65,14 @@ pip install -r requirements.txt
 cp .env.example .env
 # edit .env
 
-python -m nova_adk_agent.hello
+# Three-agent podcast synthesizer (main entry point)
+python -m nova_adk_agent
 
-# Single-agent MVP — context-aware podcast synthesizer
+# Single-agent MVP (original, preserved for reference)
 python -m nova_adk_agent.summarize
+
+# Hello-world agent
+python -m nova_adk_agent.hello
 ```
 
 ## Status
@@ -62,7 +80,7 @@ python -m nova_adk_agent.summarize
 - [x] Repo created
 - [x] Hello-world ADK agent running locally
 - [x] Podcast summarizer single-agent MVP
-- [ ] Multi-agent orchestration (Coordinator → Summarizer → Formatter)
+- [x] Multi-agent orchestration (Coordinator → Summarizer → Formatter)
 - [ ] README architecture diagram + learnings
 - [ ] LinkedIn post
 

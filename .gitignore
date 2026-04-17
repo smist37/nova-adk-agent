@@ -40,6 +40,9 @@ data/
 *.db
 *.sqlite
 
+# User profile (project-local, not committed)
+user_profile.json
+
 # Private planning / career context (do not publish)
 weekly_plan.md
 PRIVATE_*.md
