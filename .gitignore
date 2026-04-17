@@ -39,3 +39,8 @@ logs/
 data/
 *.db
 *.sqlite
+
+# Private planning / career context (do not publish)
+weekly_plan.md
+PRIVATE_*.md
+NOTES.md
