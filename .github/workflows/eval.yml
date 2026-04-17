@@ -1,0 +1,74 @@
+name: eval
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  # Allow manual runs (useful for spot-checking after prompt tweaks)
+  workflow_dispatch:
+
+jobs:
+  wireup:
+    # Fast lane: no LLM, no cost, runs on every push.
+    name: wire-up tests + smoketest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Wire-up tests
+        run: python -m pytest tests/ -v
+
+      - name: Eval harness dry-run (no LLM)
+        run: python -m eval.run --dry-run --quick
+
+  eval-live:
+    # Slow lane: hits the Gemini API. Requires GOOGLE_API_KEY secret.
+    # Runs on main only and on manual dispatch — not on every PR.
+    name: RAGAS eval (live, --quick)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    needs: wireup
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run eval --quick
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+        run: |
+          if [ -z "$GOOGLE_API_KEY" ]; then
+            echo "::warning::GOOGLE_API_KEY secret not set — skipping live eval."
+            exit 0
+          fi
+          python -m eval.run --quick
+
+      - name: Upload eval results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-results-${{ github.run_id }}
+          path: eval/results/
+          if-no-files-found: ignore
+          retention-days: 30
