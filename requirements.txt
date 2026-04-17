@@ -3,6 +3,9 @@ google-generativeai>=0.8.0
 python-dotenv>=1.0.0
 yt-dlp>=2025.1.0
 
+# A2A multi-agent (week 3)
+a2a-sdk>=0.2.0
+
 # Tests + evals
 pytest>=8.0.0
 ragas>=0.2.0
