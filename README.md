@@ -52,13 +52,16 @@ cp .env.example .env
 # edit .env
 
 python -m nova_adk_agent.hello
+
+# Single-agent MVP — context-aware podcast synthesizer
+python -m nova_adk_agent.summarize
 ```
 
 ## Status
 
 - [x] Repo created
-- [ ] Hello-world ADK agent running locally
-- [ ] Podcast summarizer single-agent MVP
+- [x] Hello-world ADK agent running locally
+- [x] Podcast summarizer single-agent MVP
 - [ ] Multi-agent orchestration (Coordinator → Summarizer → Formatter)
 - [ ] README architecture diagram + learnings
 - [ ] LinkedIn post

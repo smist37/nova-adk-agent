@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from google.adk.agents import Agent
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
+from google.genai import types as genai_types
 
 load_dotenv()
 
@@ -24,7 +25,7 @@ def calculator(expression: str) -> dict:
 
 root_agent = Agent(
     name="hello_agent",
-    model="gemini-2.0-flash",
+    model="gemini-2.5-flash",
     description="A minimal ADK agent with one calculator tool.",
     instruction=(
         "You are a helpful assistant. When the user asks a math question, "
@@ -54,10 +55,13 @@ def main() -> None:
             break
         if not user_input:
             continue
+        message = genai_types.Content(
+            role="user", parts=[genai_types.Part(text=user_input)]
+        )
         for event in runner.run(
             user_id="local",
             session_id=session.id,
-            new_message=user_input,
+            new_message=message,
         ):
             if event.is_final_response() and event.content:
                 for part in event.content.parts:
