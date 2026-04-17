@@ -47,3 +47,6 @@ user_profile.json
 weekly_plan.md
 PRIVATE_*.md
 NOTES.md
+
+# Eval run outputs (keep the harness committed, not the metered outputs)
+eval/results/
