@@ -1,0 +1,33 @@
+# Vertex AI AgentEngine deploy config for nova-adk-agent.
+#
+# This file is the single source of truth for deploy metadata. The env vars
+# listed below override the corresponding fields at deploy time. Keep this
+# file in sync with nova_adk_agent/deploy/vertex.py.
+
+agent:
+  display_name: nova-adk-podcast-synthesizer
+  description: >
+    Three-agent ADK chain (coordinator -> summarizer -> formatter) that
+    fetches podcast transcripts and produces personalized syntheses.
+  root_module: nova_adk_agent.agents
+  root_attribute: root_agent
+
+vertex:
+  # Project ID. VERIFY BEFORE DEPLOY — the default in .env.example is a
+  # placeholder Miles hasn't confirmed.
+  project_env: GOOGLE_CLOUD_PROJECT
+  location: us-central1
+  location_env: GOOGLE_CLOUD_LOCATION
+  # GCS bucket for source staging. Must exist before deploy. Default
+  # template: gs://{project}-adk-staging.
+  staging_bucket_env: GOOGLE_CLOUD_STAGING_BUCKET
+
+runtime:
+  python: "3.11"
+  requirements_file: requirements.txt
+
+checks:
+  # Smoke tests to run before flipping traffic. Both should pass locally
+  # before invoking deploy().
+  - python -m pytest tests/ -v
+  - python -m eval.run --quick
