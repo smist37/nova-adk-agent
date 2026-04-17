@@ -1,0 +1,77 @@
+# Air-gapped deployment of nova-adk-agent.
+#
+# This image is built for cleared / restricted environments where the
+# container cannot reach the public internet at runtime. Key constraints:
+#   - No calls to Gemini / Vertex (swap in a local inference endpoint).
+#   - No pip install at runtime — all wheels pre-fetched into the image.
+#   - No outbound network calls from the agent process.
+#   - User profile in a local volume, not a hosted DB.
+#
+# Build (from a network-connected build host):
+#   docker build -f Dockerfile.airgap -t nova-adk-agent:airgap .
+#
+# Save + ship to the air-gapped environment:
+#   docker save nova-adk-agent:airgap | gzip > nova-adk-agent-airgap.tar.gz
+#
+# Load on the restricted host:
+#   gunzip -c nova-adk-agent-airgap.tar.gz | docker load
+#
+# Run (expects a local inference endpoint on the host network):
+#   docker run --rm -it \
+#       --network host \
+#       --env LOCAL_LLM_URL=http://localhost:8080/v1 \
+#       --volume /data/nova-profiles:/var/lib/nova \
+#       nova-adk-agent:airgap
+
+FROM python:3.11-slim AS wheel-builder
+
+WORKDIR /wheels
+COPY requirements.txt .
+
+# Pre-fetch every wheel the agent needs. Saved into /wheels so the runtime
+# image can install without internet.
+RUN pip download --dest /wheels -r requirements.txt
+
+
+FROM python:3.11-slim
+
+# Non-root user for the agent process. No shell login.
+RUN useradd --system --no-create-home --shell /usr/sbin/nologin nova
+
+WORKDIR /app
+
+# Copy wheels + requirements, install offline, then drop the wheels to
+# keep the final image small.
+COPY --from=wheel-builder /wheels /tmp/wheels
+COPY requirements.txt .
+RUN pip install --no-cache-dir --no-index --find-links /tmp/wheels -r requirements.txt \
+    && rm -rf /tmp/wheels
+
+# Agent source.
+COPY nova_adk_agent /app/nova_adk_agent
+COPY tests /app/tests
+
+# User-profile directory, mounted at runtime.
+RUN mkdir -p /var/lib/nova && chown nova:nova /var/lib/nova
+ENV USER_PROFILE_DIR=/var/lib/nova
+
+# Explicitly disable any env that would let the agent reach out to the
+# commercial LLM APIs. Override at run time only after a deliberate
+# review of the deploy environment.
+ENV GOOGLE_API_KEY=""
+ENV GOOGLE_GENAI_USE_VERTEXAI=FALSE
+
+# The air-gapped variant expects a local inference endpoint. Defaults
+# match a typical vLLM serve setup.
+ENV LOCAL_LLM_URL=""
+ENV LOCAL_LLM_MODEL="llama-3-8b-instruct"
+
+USER nova
+
+# Healthcheck: import-level sanity, no outbound calls.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD python -c "import nova_adk_agent.hello, nova_adk_agent.routing.router" || exit 1
+
+# Default entrypoint runs the three-agent chain. Override with e.g.
+# `python -m nova_adk_agent.hello` for the hello agent.
+ENTRYPOINT ["python", "-m", "nova_adk_agent"]
