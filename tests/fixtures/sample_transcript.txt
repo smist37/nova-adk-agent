@@ -1,0 +1,35 @@
+Welcome to the show. Today we're talking about how small engineering teams at
+Series A startups ship production ML features faster than much larger teams at
+big tech companies. My guest is a staff engineer who has been on both sides.
+
+The first observation is that infrastructure scope is inversely correlated with
+shipping speed. When you have three Kubernetes clusters, seven service meshes
+and a central platform team, every feature becomes a ticket in someone else's
+queue. At a ten-person startup, the engineer who wants to ship a model owns
+the whole stack — inference server, deployment, monitoring. There's no one to
+wait for.
+
+The second observation is about evaluation. Big tech treats eval as a process:
+quarterly benchmarks, offline datasets, approval gates. Startups treat eval as
+a scratchpad: how does this feel, is it better than what we had, ship it and
+watch the metrics. Neither is right. The startup approach catches bugs the
+benchmark misses. The big-tech approach catches regressions the scratchpad
+misses. The interesting engineers do both — lightweight online eval plus a
+handful of hard offline tests they actually trust.
+
+The third observation is about cost. When an LLM feature costs five cents per
+call and you have a hundred users, you don't care. When it costs five cents
+per call and you have ten million users, it's a business. The engineering
+culture that treats cost as a first-class constraint from day one wins the
+second half of the product lifecycle. Most teams discover cost too late.
+
+The last thing I want to talk about is model routing. A lot of teams default
+to the biggest model for every query. That's lazy and expensive. Route easy
+queries through small models, hard queries through big ones. A well-tuned
+router cuts inference cost by sixty to seventy percent without changing
+end-user quality. This is the highest-leverage optimization most gen AI
+products are not doing yet.
+
+If you take one thing from this episode: treat evaluation, cost, and routing
+as first-class engineering concerns, not afterthoughts. That's the gap
+between a demo and a product.
