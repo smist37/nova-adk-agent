@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nova-adk-agent"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "google-adk>=0.2.0",
+    "python-dotenv>=1.0.0",
+    "yt-dlp>=2025.1.0",
+]
+
+[tool.setuptools.packages.find]
+include = ["nova_adk_agent*"]

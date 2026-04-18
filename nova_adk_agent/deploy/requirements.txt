@@ -1,0 +1,4 @@
+google-adk>=0.2.0
+python-dotenv>=1.0.0
+yt-dlp>=2025.1.0
+./nova_adk_agent-0.1.0-py3-none-any.whl

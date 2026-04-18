@@ -25,6 +25,8 @@ dist/
 *.key
 *.pem
 credentials.json
+.service-account
+.service-account.json
 
 # OS
 .DS_Store

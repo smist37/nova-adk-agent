@@ -1,6 +1,35 @@
-# Deploying to Vertex AI Agent Engine
+# Deployment
 
-This doc walks through deploying the three-agent chain to Vertex AI.
+## Current target: Cloud Run
+
+The project deploys to **Cloud Run** using the Gemini API free tier (AI Studio
+key). This is the zero-cost path — Cloud Run scales to zero (no idle billing)
+and the Gemini free tier covers light portfolio traffic.
+
+**Next steps:** wire a FastAPI app + Dockerfile for Cloud Run and add a
+`cloudbuild.yaml` or `gcloud run deploy` script.
+
+---
+
+## Prior art: Vertex AI Agent Engine
+
+We proved out an Agent Engine deploy (see `nova_adk_agent/deploy/vertex.py`)
+but tore it down — the ~$43/month idle cost isn't justified for a portfolio
+demo. The code and lessons learned are preserved below for reference.
+
+### Key lesson from Agent Engine deploy
+
+The `extra_packages` mechanism extracts files into `user_code/` during the
+Docker build but does NOT pip-install them. To install a local wheel, you must
+reference it in `requirements.txt` as a relative path (e.g.
+`./nova_adk_agent-0.1.0-py3-none-any.whl`) so pip picks it up in the same
+Docker build step.
+
+---
+
+## Vertex AI Agent Engine (reference, not active)
+
+This section preserved for reference.
 **The deploy step is not run as part of CI.** It requires billing, a
 verified project ID, and a human approval gate.
 

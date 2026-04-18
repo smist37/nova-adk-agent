@@ -51,8 +51,9 @@ the chain flows forward only, each agent owns one narrow job.
 
 - Python 3.11+
 - [`google-adk`](https://pypi.org/project/google-adk/) — Agent Development Kit
-- Gemini 2.5 Flash via the Gemini API (Vertex AI config stubbed for Week 2)
+- Gemini 2.5 Flash via the **Gemini API free tier** (AI Studio key, not Vertex)
 - `yt-dlp` for transcript fetching (caption API preferred, VTT fallback)
+- **Cloud Run** for hosting — scales to zero, no idle cost
 
 ## Quick start
 
@@ -125,7 +126,7 @@ python -m eval.run
 ```
 
 See [`eval/README.md`](eval/README.md) for the eval harness (RAGAS-based) and
-[`docs/DEPLOY.md`](docs/DEPLOY.md) for the Vertex AI deploy wiring.
+[`docs/DEPLOY.md`](docs/DEPLOY.md) for deployment notes.
 
 ## Roadmap
 
@@ -147,7 +148,8 @@ Stretch: [CI](.github/workflows/eval.yml),
 - [x] Multi-agent orchestration (Coordinator → Summarizer → Formatter)
 - [x] README architecture diagram + learnings
 - [x] LinkedIn post drafts ([week 1](docs/posts/week1-draft.md))
-- [ ] Vertex AI deploy (wired, not deployed)
+- [x] Vertex AI Agent Engine deploy (proved out, then torn down — idle cost not worth it)
+- [ ] Cloud Run deploy — next target, zero idle cost, Gemini free tier for inference
 
 ## License
 

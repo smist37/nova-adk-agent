@@ -51,7 +51,7 @@ def build_deploy_config() -> dict:
         DEFAULT_STAGING_BUCKET_TEMPLATE.format(project=project),
     )
     requirements = (
-        Path(__file__).resolve().parent.parent.parent / "requirements.txt"
+        Path(__file__).resolve().parent / "requirements.txt"
     )
     return {
         "project": project,
@@ -85,12 +85,32 @@ def deploy() -> str:
         location=cfg["location"],
         staging_bucket=cfg["staging_bucket"],
     )
-    remote_agent = agent_engines.create(
-        agent_engine=root_agent,
-        display_name=cfg["display_name"],
-        description=cfg["description"],
-        requirements=cfg["requirements_file"],
+    import subprocess, os
+    # Build a wheel into the repo root so the relative path passed to
+    # extra_packages results in a flat entry in dependencies.tar.gz.
+    # The container startup script runs `pip install *.whl` at tar root level,
+    # so absolute paths (which get stored with full dir structure) are never found.
+    repo_root = Path(__file__).resolve().parent.parent.parent
+    subprocess.run(
+        ["python", "-m", "build", "--wheel", "--outdir", str(repo_root), str(repo_root)],
+        check=True, capture_output=True,
     )
+    wheels = list(repo_root.glob("nova_adk_agent-*.whl"))
+    # Change to repo root so tarfile.add() stores just the filename (flat).
+    orig_dir = os.getcwd()
+    os.chdir(repo_root)
+    try:
+        remote_agent = agent_engines.create(
+            agent_engine=root_agent,
+            display_name=cfg["display_name"],
+            description=cfg["description"],
+            requirements=cfg["requirements_file"],
+            extra_packages=[w.name for w in wheels],
+        )
+    finally:
+        os.chdir(orig_dir)
+        for w in wheels:
+            w.unlink(missing_ok=True)
     return remote_agent.resource_name
 
 
